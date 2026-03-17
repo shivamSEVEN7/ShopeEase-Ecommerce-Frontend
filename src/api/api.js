@@ -3,7 +3,8 @@ import store from "../store/store";
 import { refreshAccessToken } from "../store/actions";
 
 const api = axios.create({
-  baseURL: "http://localhost:8080/api",
+  // baseURL: "http://localhost:8080/api",
+  baseURL: "https://shopease-service.onrender.com/api"
 });
 api.interceptors.request.use(
   async (config) => {
