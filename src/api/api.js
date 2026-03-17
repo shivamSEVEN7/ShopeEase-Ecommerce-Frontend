@@ -27,7 +27,7 @@ api.interceptors.request.use(
   }
 );
 export const publicApi = axios.create(
-  { baseURL: "http://localhost:8080/api" },
+  { baseURL: "https://shopease-service.onrender.com/api" },
   (error) => {
     return Promise.reject(error);
   }
