@@ -6,6 +6,7 @@ import {
   FaShoppingCart,
   FaHeart,
   FaSearchPlus,
+  FaSpinner,
 } from "react-icons/fa";
 import Rating from "@mui/material/Rating";
 import ReviewsSection from "./ReviewsSection";
@@ -74,9 +75,13 @@ const ImageGallery = ({ images }) => {
 
 const ProductPage = () => {
   const { productId, slug } = useParams();
-  const btnLoader = false;
+
   const dispatch = useDispatch();
-  const { items } = useSelector((state) => state.cart);
+  const {
+    items,
+    loading: cartLoading,
+    loadingMap,
+  } = useSelector((state) => state.cart);
   const { currentProduct: product } = useSelector((state) => state.products);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -85,12 +90,18 @@ const ProductPage = () => {
   }, [productId, dispatch]);
   const isAvailable = product?.quantity && Number(product?.quantity) > 0;
   const inTheCart = items.findIndex((item) => item.product.id === product?.id);
+  const isCartUpdating =
+    loadingMap?.[`${productId}_add`] ||
+    loadingMap?.[`${productId}_remove`] ||
+    cartLoading;
+  const isQtyUpdating =
+    loadingMap?.[`${productId}_inc`] || loadingMap?.[`${productId}_dec`];
   const handleIncreaseQuantity = () => {
     dispatch(
       increaseItemQuantityInCart(
         items[inTheCart].product.id,
-        items[inTheCart].product.productName
-      )
+        items[inTheCart].product.productName,
+      ),
     );
   };
 
@@ -98,8 +109,8 @@ const ProductPage = () => {
     dispatch(
       decreaseItemQuantityInCart(
         items[inTheCart].product.id,
-        items[inTheCart].product.productName
-      )
+        items[inTheCart].product.productName,
+      ),
     );
   };
 
@@ -189,12 +200,16 @@ const ProductPage = () => {
             <div className="mt-10">
               {inTheCart !== -1 ? (
                 <div className="flex w-full items-center justify-between gap-x-4">
-                  <div className="py-2 px-3 inline-block bg-white border border-gray-300 rounded-lg">
+                  <div
+                    className={`py-2 px-3 inline-block bg-white border border-gray-300 rounded-lg 
+  ${isQtyUpdating ? "opacity-50" : ""}`}
+                  >
                     <div className="flex items-center gap-x-3">
                       <button
+                        disabled={isQtyUpdating}
                         onClick={handleDecreaseQuantity}
                         type="button"
-                        className="size-9 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+                        className="size-9 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                       >
                         <svg
                           className="shrink-0 size-5"
@@ -213,14 +228,15 @@ const ProductPage = () => {
                       </button>
                       <input
                         readOnly
-                        className="p-0 w-12 bg-transparent border-0 text-gray-800 text-center text-lg font-medium focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        className="p-0 w-12 bg-transparent border-0 text-gray-800 text-center text-lg font-medium focus:outline-none focus:ring-0 focus:border-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                         type="number"
                         value={items[inTheCart].quantity}
                       />
                       <button
                         onClick={handleIncreaseQuantity}
+                        disabled={isQtyUpdating}
                         type="button"
-                        className="size-9 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+                        className="size-9 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed"
                       >
                         <svg
                           className="shrink-0 size-5"
@@ -258,12 +274,20 @@ const ProductPage = () => {
                 </button>
               ) : (
                 <button
-                  disabled={btnLoader}
+                  disabled={isCartUpdating}
                   onClick={handleAddToCart}
-                  className="flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-8 py-3 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-indigo-400"
+                  className={`flex w-full items-center justify-center rounded-md border border-transparent px-8 py-3 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+  ${
+    isCartUpdating
+      ? "bg-indigo-400 cursor-not-allowed"
+      : "bg-indigo-600 hover:bg-indigo-700"
+  }`}
                 >
-                  {btnLoader ? (
-                    <FaSpinner className="animate-spin h-5 w-5" />
+                  {isCartUpdating ? (
+                    <>
+                      <FaSpinner className="animate-spin h-5 w-5 mr-2" />
+                      Processing...
+                    </>
                   ) : (
                     <>
                       <FaShoppingCart className="mr-2 h-5 w-5" />

@@ -20,25 +20,17 @@ const SearchBar = ({ closeExpandedSearch }) => {
     ...items,
   ];
   const [searchParams, setSearchParams] = useSearchParams();
-  const pathname = useLocation().pathname;
   const navigate = useNavigate();
   const [category, setCategory] = useState(categories[0].categoryName);
   const [query, setQuery] = useState("");
 
   const handleSearch = () => {
+    console.log("QUERY is");
     closeExpandedSearch ? closeExpandedSearch() : "";
-    if (query === "" && searchParams.get("keyword")) {
-      searchParams.delete("keyword");
-    }
     if (query) {
       searchParams.set("keyword", query);
     }
-    if (category.toLowerCase() != "all") {
-      searchParams.set("category", category);
-    } else {
-      searchParams.delete("category");
-    }
-    navigate(`/products?${searchParams.toString()}`);
+    navigate(`/products?keyword=${query}`);
   };
 
   useEffect(() => {
@@ -81,6 +73,11 @@ const SearchBar = ({ closeExpandedSearch }) => {
         placeholder="Search for products..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleSearch();
+          }
+        }}
         className="flex-1 px-4 py-2 bg-transparent text-gray-800 placeholder-gray-400 focus:outline-none"
       />
       {query && (

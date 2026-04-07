@@ -27,7 +27,11 @@ const ProductCard = ({
   const btnLoader = false;
   const [selectedViewProduct, setSelectedViewProduct] = useState("");
   const isAvailable = quantity && Number(quantity) > 0;
-  const { items } = useSelector((state) => state.cart);
+  const { items, loading, loadingMap } = useSelector((state) => state.cart);
+
+  const isCartLoading =
+    loadingMap?.[`${id}_add`] || loadingMap?.[`${id}_remove`] || loading;
+  const isQtyUpdating = loadingMap?.[`${id}_inc`] || loadingMap?.[`${id}_dec`];
   const inTheCart = items.findIndex((item) => item.product.id === id);
   const handleAddToCart = () => {
     dispatch(addItemsToCart(id, productName));
@@ -36,8 +40,8 @@ const ProductCard = ({
     dispatch(
       increaseItemQuantityInCart(
         items[inTheCart].product.id,
-        items[inTheCart].product.productName
-      )
+        items[inTheCart].product.productName,
+      ),
     );
   };
 
@@ -45,19 +49,34 @@ const ProductCard = ({
     dispatch(
       decreaseItemQuantityInCart(
         items[inTheCart].product.id,
-        items[inTheCart].product.productName
-      )
+        items[inTheCart].product.productName,
+      ),
     );
+  };
+  const getDiscountColor = (value) => {
+    if (value >= 80) return "bg-rose-600 shadow-rose-200";
+    if (value >= 60) return "bg-orange-500 shadow-orange-200";
+    if (value >= 40) return "bg-amber-500 shadow-amber-200";
+    if (value >= 20) return "bg-blue-600 shadow-blue-200";
+    return "bg-slate-500 shadow-slate-200";
   };
   return (
     <div className="border rounded-lg shadow-xl overflow-hidden transition-shadow duration-300">
       <Link to={`/product/${id}/${slug}`}>
-        <div className="w-full overflow-hidden aspect-[3/2] flex items-center justify-center bg-gray-100">
+        <div className="relative w-full aspect-square overflow-hidden bg-gray-100">
           <img
-            className="max-w-full max-h-full object-contain cursor-pointer transition-transform duration-300 transform hover:scale-105"
+            className="w-full h-full object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
             src={image}
             alt={productName}
-          ></img>
+          />
+
+          {discount > 0 && (
+            <div
+              className={`absolute top-3 right-3 z-10 px-3 py-1 text-white text-[10px] font-black uppercase tracking-wider rounded-full shadow-lg transition-colors duration-300 ${getDiscountColor(discount)}`}
+            >
+              {discount}% OFF
+            </div>
+          )}
         </div>
       </Link>
       <div className="p-4">
@@ -89,17 +108,15 @@ const ProductCard = ({
           </Link>
           {inTheCart != -1 ? (
             <div
-              className="py-2 px-3 inline-block bg-white border border-gray-200 rounded-lg"
-              data-hs-input-number=""
+              className={`py-2 px-3 inline-block bg-white border border-gray-200 rounded-lg 
+  ${isQtyUpdating ? "opacity-50 pointer-events-none" : ""}`}
             >
               <div className="flex items-center gap-x-1.5">
                 <button
                   onClick={handleDecreaseQuantity}
+                  disabled={isQtyUpdating}
                   type="button"
-                  className="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
-                  tabIndex="-1"
-                  aria-label="Decrease"
-                  data-hs-input-number-decrement=""
+                  className="size-6 inline-flex justify-center items-center text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   <svg
                     className="shrink-0 size-3.5"
@@ -116,21 +133,19 @@ const ProductCard = ({
                     <path d="M5 12h14"></path>
                   </svg>
                 </button>
+
                 <input
                   disabled
                   className="p-0 w-6 bg-transparent border-0 text-gray-800 text-center focus:ring-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   type="number"
-                  aria-roledescription="Number field"
                   value={items[inTheCart].quantity}
-                  data-hs-input-number-input=""
                 />
+
                 <button
                   onClick={handleIncreaseQuantity}
+                  disabled={isQtyUpdating}
                   type="button"
-                  className="size-6 inline-flex justify-center items-center gap-x-2 text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 shadow-2xs hover:bg-gray-50 focus:outline-hidden focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
-                  tabIndex="-1"
-                  aria-label="Increase"
-                  data-hs-input-number-increment=""
+                  className="size-6 inline-flex justify-center items-center text-sm font-medium rounded-md border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   <svg
                     className="shrink-0 size-3.5"
@@ -152,16 +167,21 @@ const ProductCard = ({
             </div>
           ) : (
             <button
-              disabled={!isAvailable || btnLoader}
+              disabled={!isAvailable || btnLoader || isCartLoading}
               onClick={handleAddToCart}
               className={`bg-blue-500 ${
-                isAvailable ? "opacity-100 hover:bg-blue-600" : "opacity-70"
+                isAvailable && !isCartLoading
+                  ? "opacity-100 hover:bg-blue-600"
+                  : "opacity-50 cursor-not-allowed"
               }
-                        text-white py-2 px-3 rounded-lg items-center transition-colors duration-300 w-36 flex justify-center`}
+  text-white py-2 px-3 rounded-lg items-center transition-colors duration-300 w-36 flex justify-center`}
             >
               <FaShoppingCart className="mr-2" />
-
-              {isAvailable ? "Add to Cart" : "Stock Out"}
+              {isCartLoading
+                ? "Processing..."
+                : isAvailable
+                  ? "Add to Cart"
+                  : "Stock Out"}
             </button>
           )}
         </div>

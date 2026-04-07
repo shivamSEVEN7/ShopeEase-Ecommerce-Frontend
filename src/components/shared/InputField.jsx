@@ -1,5 +1,6 @@
 const InputField = ({
   label,
+  name,
   id,
   type,
   errors,
@@ -29,6 +30,7 @@ const InputField = ({
       </label>
       <input
         type={type}
+        name={name}
         id={id}
         placeholder={placeholder}
         readOnly={readOnly}
@@ -63,12 +65,12 @@ const InputField = ({
                   message: "Invalid email",
                 }
               : type === "url"
-              ? {
-                  value:
-                    /^(https?:\/\/)?(([a-zA-Z0-9\u00a1-\uffff-]+\.)+[a-zA-Z\u00a1-\uffff]{2,})(:\d{2,5})?(\/[^\s]*)?$/,
-                  message: "Please enter a valid url",
-                }
-              : null,
+                ? {
+                    value:
+                      /^(https?:\/\/)?(([a-zA-Z0-9\u00a1-\uffff-]+\.)+[a-zA-Z\u00a1-\uffff]{2,})(:\d{2,5})?(\/[^\s]*)?$/,
+                    message: "Please enter a valid url",
+                  }
+                : null,
           validate: customValidation
             ? (value) => customValidation(value)
             : null,

@@ -221,6 +221,8 @@ const ProductFilterBar = () => {
     "flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase mb-1";
   const activeSelectStyles =
     "w-full appearance-none rounded-md border border-indigo-500 ring-1 ring-indigo-500 bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 shadow-sm focus:outline-none";
+  //   console.log({ sort, minPrice, maxPrice, rating, discount });
+  // }, [sort, minPrice, maxPrice, rating, discount]);
 
   return (
     <div className="mb-6">
@@ -240,6 +242,120 @@ const ProductFilterBar = () => {
             </button>
           </div>
         </Badge>
+      </div>
+
+      <div className="hidden lg:block rounded-xl bg-white p-4 shadow-sm border border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 md:gap-6 items-end">
+          <div className="w-full sm:w-auto md:flex-1 min-w-[160px]">
+            <label htmlFor="sort-desktop" className={labelStyles}>
+              <FaSort /> Sort By
+            </label>
+            <div className="relative">
+              <select
+                name="sort"
+                id="sort-desktop"
+                value={sort}
+                onChange={handleFilterChange}
+                className={selectStyles}
+              >
+                {sortOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <IoChevronDown className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+
+          <div className="w-full sm:w-auto md:flex-1 min-w-[200px]">
+            <label className={labelStyles}>
+              <FaRupeeSign /> Price Range
+            </label>
+            <div className="flex gap-2">
+              <div className="relative w-1/2">
+                <select
+                  name="min-price"
+                  id="min-price-desktop"
+                  value={minPrice}
+                  onChange={handleFilterChange}
+                  className={selectStyles}
+                >
+                  <option value="">Min</option>
+                  {priceOptions.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+                <IoChevronDown className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-400" />
+              </div>
+              <div className="relative w-1/2">
+                <select
+                  name="max-price"
+                  id="max-price-desktop"
+                  value={maxPrice}
+                  onChange={handleFilterChange}
+                  className={selectStyles}
+                >
+                  <option value="">Max</option>
+                  {priceOptions.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+                <IoChevronDown className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full sm:w-auto md:flex-1 min-w-[160px]">
+            <label htmlFor="rating-desktop" className={labelStyles}>
+              <FaStar /> Rating
+            </label>
+            <div className="relative">
+              <select
+                name="min-rating"
+                id="rating-desktop"
+                value={rating}
+                onChange={handleFilterChange}
+                className={selectStyles}
+              >
+                <option value="">All Ratings</option>
+                {ratingOptions.map((r) => (
+                  <option key={r.value} value={r.value}>
+                    {r.label}
+                  </option>
+                ))}
+              </select>
+              <IoChevronDown className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+
+          <div className="w-full sm:w-auto md:flex-1 min-w-[160px]">
+            <label htmlFor="discount-desktop" className={labelStyles}>
+              <FaPercentage /> Discount
+            </label>
+            <div className="relative">
+              <select
+                name="min-discount"
+                id="discount-desktop"
+                value={discount}
+                onChange={handleFilterChange}
+                className={selectStyles}
+              >
+                <option value="">Any</option>
+                {discountOptions.map((d) => (
+                  <option key={d} value={d}>
+                    {d}% & above
+                  </option>
+                ))}
+              </select>
+              <IoChevronDown className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
+        </div>
       </div>
 
       <Dialog

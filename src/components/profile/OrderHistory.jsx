@@ -9,11 +9,15 @@ const OrderHistory = () => {
   const dispatch = useDispatch();
 
   const { orders, pagination, loading, error } = useSelector(
-    (state) => state.order
+    (state) => state.order,
   );
+  const { userDetails, loading: authLoading } = useSelector(
+    (state) => state.authentication,
+  );
+
   useEffect(() => {
-    dispatch(fetchUserOrders());
-  }, [dispatch]);
+    if (!authLoading && userDetails) dispatch(fetchUserOrders());
+  }, [dispatch, userDetails]);
   const showMoreButtonHandler = () => {
     console.log("Show More Button Clicked");
     dispatch(fetchMoreUserOrders(pagination.offset + pagination.limit, 4));
@@ -29,11 +33,7 @@ const OrderHistory = () => {
             <OrderCard key={order.orderId} order={order} />
           ))}
         </div>
-        {orders.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">You haven't placed any orders yet.</p>
-          </div>
-        )}
+
         <div className="mt-6 flex justify-center">
           {pagination.last ? (
             <button
