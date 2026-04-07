@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router";
 import EmptyCart from "./EmptyCart";
 import NotLoggedInCart from "./NotLoggedInCart";
 import formatToINR from "../../utils/formatToINR";
+import CartLoadingSkeleton from "./CartLoadingSkelton";
 
 const Cart = () => {
   const {
@@ -11,12 +12,17 @@ const Cart = () => {
     price,
     discount,
     totalAmount,
+    loading: cartLoading,
     shipping,
   } = useSelector((state) => state.cart);
-  const { isAuthenticated } = useSelector((state) => state.authentication);
+  const { isAuthenticated, loading: isAuthenticating } = useSelector(
+    (state) => state.authentication,
+  );
   const navigate = useNavigate();
   return isAuthenticated ? (
-    cartItems.length === 0 ? (
+    isAuthenticating || cartLoading ? (
+      <CartLoadingSkeleton />
+    ) : cartItems.length === 0 ? (
       <EmptyCart />
     ) : (
       <div className="max-w-5xl max-lg:max-w-2xl mx-auto p-4">

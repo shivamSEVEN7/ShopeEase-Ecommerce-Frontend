@@ -13,7 +13,7 @@ import PublicRoute from "./components/PublicRoute";
 import Cart from "./components/cart/Cart";
 import Checkout from "./components/checkout/Checkout";
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
   fetchCategories,
   getCart,
@@ -48,13 +48,25 @@ import SellerSettingsPage from "./components/seller/SellerSettingsPage";
 import AddNewProductForm from "./components/seller/AddNewProductForm";
 const App = () => {
   const dispatch = useDispatch();
+
   const initUserDetails = async () => {
     if (localStorage.getItem("isLoggedIn")) {
-      dispatch(refreshAccessToken());
+      try {
+        const result = await dispatch(refreshAccessToken());
+        if (result.error) {
+          throw result.error;
+        }
+        dispatch(getCart());
+        dispatch(getUserAddresses());
+      } catch (err) {
+        console.log("Error initializing user details");
+        console.log(err);
+      }
     }
   };
   useEffect(() => {
-    initUserDetails(), dispatch(fetchCategories());
+    initUserDetails();
+    dispatch(fetchCategories());
   }, []);
   const router = createBrowserRouter([
     {

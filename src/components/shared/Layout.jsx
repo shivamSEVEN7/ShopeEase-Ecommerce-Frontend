@@ -11,9 +11,18 @@ import {
 import { useEffect } from "react";
 const Layout = () => {
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <div>
-        <Toaster />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            className: "text-sm font-medium",
+            style: {
+              border: "1px solid #f1f5f9",
+              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.05)",
+            },
+          }}
+        />
       </div>
       <NavigationBar />
 

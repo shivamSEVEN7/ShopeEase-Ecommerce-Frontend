@@ -22,7 +22,7 @@ const Checkout = () => {
   const { selectedAddress } = useSelector((state) => state.address);
   const { paymentMode } = useSelector((state) => state.payment);
   const { loading: orderLoading, error: orderError } = useSelector(
-    (state) => state.order
+    (state) => state.order,
   );
   const [activeStep, setActiveStep] = useState(0);
   const dispatch = useDispatch();
@@ -54,8 +54,8 @@ const Checkout = () => {
             createOrder(
               items,
               selectedAddress.addressId,
-              paymentMode.name.toUpperCase()
-            )
+              paymentMode.name.toUpperCase(),
+            ),
           );
 
           orderId.current = data.orderId;
@@ -75,8 +75,8 @@ const Checkout = () => {
             createOrder(
               items,
               selectedAddress.addressId,
-              paymentMode.name.toUpperCase()
-            )
+              paymentMode.name.toUpperCase(),
+            ),
           );
           paymentSessionId.current = data.paymentSessionId;
           orderId.current = data.orderId;
@@ -100,7 +100,6 @@ const Checkout = () => {
       <Toaster />
       <NavigationBar />
 
-      {/* Content wrapper with bottom padding equal to footer height */}
       <div className="flex-grow w-full py-4 sm:p-6 lg:p-8 pb-24">
         <div className="min-h-[calc(100vh-200px)] bg-white p-0 sm:p-8">
           <Stepper activeStep={activeStep} alternativeLabel>

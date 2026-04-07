@@ -22,28 +22,36 @@ const Login = () => {
     mode: "onTouched",
   });
   const loginHandler = async (data) => {
+    console.log(data);
     dispatch(login(data, reset));
   };
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Sign In
-        </h2>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 selection:bg-blue-100">
+      <div className="max-w-md w-full bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 md:p-10 p-4">
+        <div className="mb-10 text-center">
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+            Sign In
+          </h2>
+          <p className="text-sm text-slate-400 mt-2 font-medium uppercase tracking-widest text-[10px]">
+            Welcome back to ShopEase
+          </p>
+        </div>
 
-        <form className="space-y-4" onSubmit={handleSubmit(loginHandler)}>
-          <InputField
-            label="UserName"
-            required
-            id="username"
-            type="text"
-            message="*UserName is required"
-            placeholder="Enter your username"
-            register={register}
-            errors={errors}
-          />
+        <form className="space-y-6" onSubmit={handleSubmit(loginHandler)}>
+          <div className="space-y-1">
+            <InputField
+              label="Email, Username, or Mobile"
+              required
+              id="identifier"
+              type="text"
+              message="*Email, Username, or Mobile is required"
+              placeholder="Email, Username, or Mobile"
+              register={register}
+              errors={errors}
+            />
+          </div>
 
-          <div>
+          <div className="space-y-1">
             <PasswordInputField
               label="Password"
               required
@@ -55,17 +63,20 @@ const Login = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <label className="flex items-center">
+          <div className="flex items-center justify-between pt-1">
+            <label className="flex items-center group cursor-pointer">
               <input
                 type="checkbox"
-                className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer transition-all"
+                {...register("rememberMe")}
               />
-              <span className="ml-2 text-sm text-gray-600">Remember me</span>
+              <span className="ml-2 text-sm text-slate-500 group-hover:text-slate-700 transition-colors">
+                Remember me
+              </span>
             </label>
             <a
               href="#"
-              className="text-sm text-indigo-600 hover:text-indigo-500"
+              className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
             >
               Forgot password?
             </a>
@@ -73,17 +84,18 @@ const Login = () => {
 
           <button
             disabled={loader}
-            className=" flex items-center justify-center w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg transition-colors"
+            className="flex items-center justify-center w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-100 active:scale-[0.98]"
           >
-            Sign In {loader === true ? <PuffLoader size={30} /> : ""}
+            <span className={loader ? "mr-2" : ""}>Sign In</span>
+            {loader && <PuffLoader color="#ffffff" size={20} />}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Don't have an account?
+        <div className="mt-8 pt-6 border-t border-slate-50 text-center text-sm text-slate-500">
+          Don't have an account?{" "}
           <Link
             to={"/register"}
-            className="text-indigo-600 hover:text-indigo-500 font-medium"
+            className="text-blue-600 hover:text-blue-700 font-bold ml-1 transition-colors"
           >
             Sign up
           </Link>

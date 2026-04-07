@@ -15,7 +15,7 @@ const ActiveFilters = ({
   // };
 
   return (
-    <div className="hidden mb-6 mt-4 lg:flex flex-wrap items-center gap-3">
+    <div className="hidden mb-6 mt-4 flex-wrap items-center gap-3">
       <span className="text-sm font-medium text-gray-500">Active Filters:</span>
 
       {Object.entries(mockActiveFilters).map(([key, value]) =>
@@ -35,7 +35,7 @@ const ActiveFilters = ({
           </span>
         ) : (
           ""
-        )
+        ),
       )}
 
       <button

@@ -4,7 +4,7 @@ const initialState = {
   username: null,
   userDetails: null,
   accessToken: null,
-  isAuthenticated: localStorage.getItem("isLoggedIn"),
+  isAuthenticated: localStorage.getItem("isLoggedIn") === "true",
   loading: false,
   error: null,
   expiresAt: null,
@@ -30,10 +30,13 @@ const authSlice = createSlice({
       toast.success("Login successful");
     },
     authFailure: (state, action) => {
-      state.loading = false;
-      state.error = action.payload.message;
       localStorage.removeItem("isLoggedIn");
       toast.error(action.payload.toastMessage);
+      return {
+        ...initialState,
+        isAuthenticated: null,
+        error: action.payload.message,
+      };
     },
     regenerateAccessToken: (state, action) => {
       state.username = action.payload.username;

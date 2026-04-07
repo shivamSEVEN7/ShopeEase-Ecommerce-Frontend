@@ -1,14 +1,14 @@
-import { Badge } from "@mui/material";
-import { useState } from "react";
+import { Badge, CircularProgress } from "@mui/material";
+import { useEffect, useState } from "react";
 import { FaUser, FaBars, FaTimes } from "react-icons/fa";
-import { FiGrid, FiSearch, FiShoppingCart } from "react-icons/fi";
+import { FiGrid, FiSearch, FiShoppingCart, FiX } from "react-icons/fi";
 
 import { FaRegUserCircle } from "react-icons/fa";
 
 import { CiLogin } from "react-icons/ci";
 import { CiShop } from "react-icons/ci";
 
-import { Link, Navigate, useNavigate } from "react-router";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router";
 import {
   Avatar,
   Dropdown,
@@ -19,18 +19,41 @@ import {
 import { FiLogIn } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../../store/actions";
-import SearchBar from "./SearchBar";
+
 import { MdStore } from "react-icons/md";
+import CategoryNavBar from "./CategoryNavBar";
+import CategoryNavBarSkeleton from "./CategoryNavBarSkelton";
+import MobileSearchBar from "./MobileSearchBar";
+import { Dialog, DialogPanel } from "@headlessui/react";
 
 export default function NavigationBar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const { isAuthenticated, roles } = useSelector(
-    (state) => state.authentication
-  );
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [query, setQuery] = useState("");
+  const {
+    items: categories,
+    loading: categoriesLoading,
+    error,
+  } = useSelector((state) => state.categories);
+  const {
+    isAuthenticated,
+    loading: isAuthenticating,
+    roles,
+  } = useSelector((state) => state.authentication);
   const { items } = useSelector((state) => state.cart);
   const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   const handleLogout = () => {
     dispatch(logoutUser(navigate));
   };
@@ -38,35 +61,67 @@ export default function NavigationBar() {
     setIsSearchExpanded(false);
   };
   const { userDetails } = useSelector((state) => state.authentication);
+  const handleSearch = () => {
+    if (query) {
+      searchParams.set("keyword", query);
+      navigate(`/products?keyowrd=${query}`);
+    }
+  };
+  const { loading: isCartLoading } = useSelector((state) => state.cart);
 
   return (
     <>
-      <nav className="bg-white shadow-md sticky w-full z-50">
+      <nav
+        className={`sticky top-0 w-full z-50 transition-all duration-300
+  ${scrolled ? "bg-white/60 backdrop-blur-md shadow-md" : "bg-white"}`}
+      >
         <div className=" mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             {isSearchExpanded ? (
-              <div
-                className="w-full transition-all duration-300 ease-in-out"
-                style={{
-                  opacity: isSearchExpanded ? 1 : 0,
-                  transform: isSearchExpanded ? "scale(1)" : "scale(0.95)",
-                }}
+              <Dialog
+                open={isSearchExpanded}
+                onClose={() => setIsSearchExpanded(false)}
+                className="relative z-[100]"
               >
-                <SearchBar closeExpandedSearch={closeExpandedSearch} />
-              </div>
+                <div
+                  className="fixed inset-0 bg-black/20 backdrop-blur-sm"
+                  aria-hidden="true"
+                />
+
+                <div className="fixed inset-0 overflow-y-auto">
+                  <div className="flex min-h-full items-start justify-center p-0 sm:p-4">
+                    <DialogPanel className="w-full bg-white shadow-xl transition-all">
+                      <MobileSearchBar
+                        closeExpandedSearch={closeExpandedSearch}
+                      />
+                    </DialogPanel>
+                  </div>
+                </div>
+              </Dialog>
             ) : (
               <>
-                <div className="flex flex-shrink-0 text-2xl font-bold text-blue-600">
+                <div className="flex flex-shrink-0 text-2xl font-black tracking-tight text-blue-600">
                   <Link to={"/"}>ShopEase</Link>
                 </div>
 
-                <div className="hidden  md:flex flex-1 items-center mx-4 space-x-2">
-                  <SearchBar />
-                </div>
-
-                {/* Right: Icons */}
-
                 <div className="flex space-x-4 items-center">
+                  <div className="hidden  md:flex flex-1 items-center mx-4 space-x-2">
+                    <div className="hidden lg:flex items-center bg-slate-100/50 rounded-full px-4 py-1.5">
+                      <FiSearch className="text-slate-400 text-lg mr-2" />
+                      <input
+                        type="text"
+                        placeholder="Search for products..."
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSearch();
+                          }
+                        }}
+                        className="bg-transparent border-none outline-none focus:outline-none focus:ring-0 text-sm w-96 placeholder:text-slate-400"
+                      />
+                    </div>
+                  </div>
                   <FiSearch
                     onClick={() => {
                       setIsSearchExpanded(true);
@@ -74,55 +129,59 @@ export default function NavigationBar() {
                     className="md:hidden w-6 h-6"
                   />
                   {isAuthenticated ? (
-                    <Dropdown
-                      arrowIcon={false}
-                      inline
-                      placement="bottom"
-                      label={<FaRegUserCircle className="h-6 w-6" />}
-                    >
-                      <DropdownHeader>
-                        <span className="block text-sm">
-                          {userDetails?.name}
-                        </span>
-                        <span className="block truncate text-sm font-medium">
-                          {userDetails?.email}
-                        </span>
-                      </DropdownHeader>
-                      <Link to={"/account/profile"}>
-                        <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
-                          My Profile
-                        </DropdownItem>
-                      </Link>
-                      <Link to={"/account/orders"}>
-                        <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
-                          Orders
-                        </DropdownItem>
-                      </Link>
-                      <Link to={"/account/wishlist"}>
-                        <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
-                          Wishlist
-                        </DropdownItem>
-                      </Link>
-                      <Link to={"/account/gift-cards"}>
-                        <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
-                          Gift Cards
-                        </DropdownItem>
-                      </Link>
-                      <Link to={"/account/notifications"}>
-                        <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
-                          Notifications
-                        </DropdownItem>
-                      </Link>
-                      <DropdownDivider />
-                      <DropdownItem
-                        className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100"
-                        onClick={() => {
-                          handleLogout();
-                        }}
+                    isAuthenticating ? (
+                      <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    ) : (
+                      <Dropdown
+                        arrowIcon={false}
+                        inline
+                        placement="bottom"
+                        label={<FaRegUserCircle className="h-6 w-6" />}
                       >
-                        Sign out
-                      </DropdownItem>
-                    </Dropdown>
+                        <DropdownHeader>
+                          <span className="block text-sm">
+                            {userDetails?.name}
+                          </span>
+                          <span className="block truncate text-sm font-medium">
+                            {userDetails?.email}
+                          </span>
+                        </DropdownHeader>
+                        <Link to={"/account/profile"}>
+                          <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
+                            My Profile
+                          </DropdownItem>
+                        </Link>
+                        <Link to={"/account/orders"}>
+                          <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
+                            Orders
+                          </DropdownItem>
+                        </Link>
+                        <Link to={"/account/wishlist"}>
+                          <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
+                            Wishlist
+                          </DropdownItem>
+                        </Link>
+                        <Link to={"/account/gift-cards"}>
+                          <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
+                            Gift Cards
+                          </DropdownItem>
+                        </Link>
+                        <Link to={"/account/notifications"}>
+                          <DropdownItem className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100">
+                            Notifications
+                          </DropdownItem>
+                        </Link>
+                        <DropdownDivider />
+                        <DropdownItem
+                          className="!text-gray-700 hover:!text-gray-900 hover:!bg-gray-100"
+                          onClick={() => {
+                            handleLogout();
+                          }}
+                        >
+                          Sign out
+                        </DropdownItem>
+                      </Dropdown>
+                    )
                   ) : (
                     ""
                   )}
@@ -140,19 +199,42 @@ export default function NavigationBar() {
                       </span>
                     </Link>
                   )}
-
-                  <Link to={"/cart"}>
+                  {isAuthenticating ? (
+                    <div className="relative">
+                      <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                      <div className="absolute -top-1 -right-1 w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
+                    </div>
+                  ) : (
                     <Badge
                       showZero
-                      badgeContent={items.length}
+                      badgeContent={
+                        isCartLoading ? (
+                          <CircularProgress
+                            size={10}
+                            thickness={6}
+                            sx={{ color: "#36d7b7" }}
+                          />
+                        ) : (
+                          items.length
+                        )
+                      }
                       color="primary"
-                      className="rounded-full hover:bg-gray-100"
+                      sx={{
+                        "& .MuiBadge-badge": {
+                          backgroundColor: isCartLoading ? "white" : undefined,
+                          color: isCartLoading ? "inherit" : "white",
+                          border: isCartLoading ? "1px solid #e2e8f0" : "none",
+                          padding: isCartLoading ? "2px" : "0",
+                          minWidth: isCartLoading ? "18px" : "20px",
+                          height: isCartLoading ? "18px" : "20px",
+                        },
+                      }}
                     >
                       <span className="flex items-center gap-1">
                         <FiShoppingCart className="h-6 w-6" />
                       </span>
                     </Badge>
-                  </Link>
+                  )}
 
                   {roles.includes("SELLER", "ADMIN") || !isAuthenticated ? (
                     roles.includes("SELLER") ? (
@@ -166,6 +248,11 @@ export default function NavigationBar() {
                     ) : (
                       ""
                     )
+                  ) : isAuthenticating ? (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded-full animate-pulse">
+                      <div className="w-4 h-4 bg-gray-300 rounded animate-pulse"></div>
+                      <div className="w-20 h-3 bg-gray-300 rounded animate-pulse"></div>
+                    </div>
                   ) : (
                     <Link
                       className="hidden lg:flex items-center space-x-2 px-4 py-[6px] 
@@ -185,14 +272,22 @@ export default function NavigationBar() {
           </div>
         </div>
       </nav>
-      {isSearchExpanded && (
+      {categoriesLoading ? (
+        <CategoryNavBarSkeleton />
+      ) : (
+        <CategoryNavBar
+          categories={categories}
+          categoriesLoading={categoriesLoading}
+        />
+      )}
+      {/* {isSearchExpanded && (
         <div
           onTouchStart={() => {
             setIsSearchExpanded(false);
           }}
           className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
         ></div>
-      )}
+      )} */}
     </>
   );
 }

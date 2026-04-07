@@ -20,7 +20,7 @@ const PaymentPage = ({ paymentSessionId, orderId, setOrderComplete }) => {
         .then((result) => {
           if (result.error) {
             console.log(
-              "User has closed the popup or there is some payment error, Check for Payment Status"
+              "User has closed the popup or there is some payment error, Check for Payment Status",
             );
             console.log(result.error);
             setPaymentFailed(true);
@@ -31,7 +31,7 @@ const PaymentPage = ({ paymentSessionId, orderId, setOrderComplete }) => {
           }
           if (result.paymentDetails) {
             console.log(
-              "Payment has been completed, Verifying payment from Backend"
+              "Payment has been completed, Verifying payment from Backend",
             );
             console.log("Order Id is " + orderId);
             setIsProcessing(true);

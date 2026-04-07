@@ -31,7 +31,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       className={`fixed inset-y-0 left-0 bg-white shadow-lg w-72 transform ${
         isOpen ? "translate-x-0" : "-translate-x-full"
       } transition-transform duration-300 ease-in-out z-50 
-      lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:z-auto lg:translate-x-0 lg:flex-shrink-0`}
+      lg:sticky lg:top-18 lg:h-screen lg:overflow-y-auto lg:z-auto lg:translate-x-0 lg:flex-shrink-0`}
     >
       <button
         onClick={onClose}
@@ -61,7 +61,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           to="orders"
           className={({ isActive }) =>
             `font-bold flex justify-between items-center text-gray-800 ${linkClasses(
-              { isActive }
+              { isActive },
             )}`
           }
         >

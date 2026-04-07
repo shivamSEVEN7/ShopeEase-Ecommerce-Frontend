@@ -27,6 +27,7 @@ import {
   cartFailure,
   cartLoading,
   removeItem,
+  setItemLoading,
   updateCart,
   updateItemQuantity,
 } from "../slice/cartSlice";
@@ -60,7 +61,7 @@ export const fetchProducts = (queryString) => async (dispatch) => {
         totalElements: data.totalElements,
         totalPages: data.totalPages,
         lastPage: data.lastPage,
-      })
+      }),
     );
   } catch (err) {
     console.dir(err);
@@ -88,13 +89,8 @@ export const fetchCategories = () => async (dispatch) => {
     const { data } = await publicApi.get(`/public/categories`);
     dispatch(
       fetchCategoriesSuccess({
-        content: data.content,
-        pageNumber: data.pageNumber,
-        pageSize: data.pageSize,
-        totalElements: data.totalElements,
-        totalPages: data.totalPages,
-        lastPage: data.lastPage,
-      })
+        content: data,
+      }),
     );
   } catch (err) {
     console.dir(err);
@@ -105,14 +101,15 @@ export const fetchCategories = () => async (dispatch) => {
 export const login = (formData, reset) => async (dispatch) => {
   try {
     dispatch(authStart());
-    console.log(formData);
+
     const { data } = await publicApi.post(
       "/auth/login",
       {
-        username: formData.username,
+        identifier: formData.identifier,
         password: formData.password,
+        rememberMe: formData.rememberMe,
       },
-      { withCredentials: true }
+      { withCredentials: true },
     );
     reset();
     dispatch(loginSuccess(data));
@@ -124,7 +121,7 @@ export const login = (formData, reset) => async (dispatch) => {
       authFailure({
         message: err.message,
         toastMessage: data.message || "Login Failed",
-      })
+      }),
     );
   }
 };
@@ -132,7 +129,7 @@ export const login = (formData, reset) => async (dispatch) => {
 export const logoutUser = (navigate) => async (dispatch) => {
   try {
     const data = await api.post("/auth/logout", {}, { withCredentials: true });
-    console.log(data);
+
     dispatch(logout());
     navigate("/login", { replace: true });
   } catch (err) {
@@ -151,20 +148,19 @@ export const logoutFromOtherDevice = (sessionId) => async (dispatch) => {
 };
 
 export const refreshAccessToken = () => async (dispatch) => {
+  dispatch(authStart());
   try {
-    console.log("RGA");
-    dispatch(authStart());
     const { data } = await publicApi.post(
       "/auth/refresh",
       {},
-      { withCredentials: true }
+      { withCredentials: true },
     );
-    console.log(data);
+
     dispatch(regenerateAccessToken(data));
-    dispatch(getUserAddresses());
-    dispatch(getCart());
+    return data.accessToken;
   } catch (err) {
     dispatch(authFailure({ toastMessage: "You Have Been Logged Out" }));
+    throw err;
   }
 };
 
@@ -179,7 +175,7 @@ export const registerUser =
         gender: formData.gender,
         password: formData.password,
       });
-      console.log(data);
+
       setRegistrationSuccess(true);
       dispatch(registerUserSuccess());
     } catch (err) {
@@ -187,7 +183,7 @@ export const registerUser =
         authFailure({
           message: err.message,
           toastMessage: "Registration failed",
-        })
+        }),
       );
       console.log("Registration failed " + err.message);
     }
@@ -215,7 +211,7 @@ export const getCart = () => async (dispatch) => {
         shipping: data.shipping,
         totalAmount: data.totalAmount,
         items: data.cartItems,
-      })
+      }),
     );
   } catch (err) {
     console.dir(err);
@@ -223,31 +219,57 @@ export const getCart = () => async (dispatch) => {
   }
 };
 
-export const addItemsToCart = (productId, productName) => async (dispatch) => {
-  try {
-    dispatch(cartLoading());
-    const { data } = await api.post(`cart/product/${productId}/quantity/1`);
-    dispatch(
-      addItem({
-        cartId: data.cartId,
-        price: data.price,
-        discount: data.discount,
-        shipping: data.shipping,
-        totalAmount: data.totalAmount,
-        items: data.cartItems,
-      })
-    );
-    toast.success(`${productName} added to cart`);
-  } catch (err) {
-    console.dir(err);
-    dispatch(cartFailure(err.message));
-  }
-};
+export const addItemsToCart =
+  (productId, productName) => async (dispatch, getState) => {
+    const { authentication } = getState();
+
+    if (!authentication.isAuthenticated) {
+      toast.error("Please login to add items to cart");
+      return;
+    }
+    try {
+      dispatch(
+        setItemLoading({
+          productId: productId,
+          actionType: "add",
+          value: true,
+        }),
+      );
+      const { data } = await api.post(`cart/product/${productId}/quantity/1`);
+      dispatch(
+        addItem({
+          cartId: data.cartId,
+          price: data.price,
+          discount: data.discount,
+          shipping: data.shipping,
+          totalAmount: data.totalAmount,
+          items: data.cartItems,
+        }),
+      );
+      dispatch(
+        setItemLoading({
+          productId: productId,
+          actionType: "add",
+          value: false,
+        }),
+      );
+      toast.success(`${productName} added to cart`);
+    } catch (err) {
+      console.dir(err);
+      dispatch(cartFailure(err.message));
+    }
+  };
 
 export const removeItemFromCart =
   (productId, productName) => async (dispatch) => {
     try {
-      dispatch(cartLoading());
+      dispatch(
+        setItemLoading({
+          productId: productId,
+          actionType: "remove",
+          value: true,
+        }),
+      );
       const { data } = await api.delete(`/cart/product/${productId}`);
       dispatch(
         removeItem({
@@ -257,7 +279,14 @@ export const removeItemFromCart =
           shipping: data.shipping,
           totalAmount: data.totalAmount,
           items: data.cartItems,
-        })
+        }),
+      );
+      dispatch(
+        setItemLoading({
+          productId: productId,
+          actionType: "remove",
+          value: false,
+        }),
       );
       toast.success(`${productName} removed from cart`);
     } catch (err) {
@@ -269,9 +298,15 @@ export const removeItemFromCart =
 export const increaseItemQuantityInCart =
   (productId, productName) => async (dispatch) => {
     try {
-      dispatch(cartLoading());
+      dispatch(
+        setItemLoading({
+          productId: productId,
+          actionType: "inc",
+          value: true,
+        }),
+      );
       const { data } = await api.put(
-        `/cart/product/${productId}/quantity/increase`
+        `/cart/product/${productId}/quantity/increase`,
       );
       dispatch(
         updateItemQuantity({
@@ -281,7 +316,14 @@ export const increaseItemQuantityInCart =
           shipping: data.shipping,
           totalAmount: data.totalAmount,
           items: data.cartItems,
-        })
+        }),
+      );
+      dispatch(
+        setItemLoading({
+          productId: productId,
+          actionType: "inc",
+          value: false,
+        }),
       );
       toast.success(`${productName} quantity increased`);
     } catch (err) {
@@ -293,9 +335,15 @@ export const increaseItemQuantityInCart =
 export const decreaseItemQuantityInCart =
   (productId, productName) => async (dispatch) => {
     try {
-      dispatch(cartLoading());
+      dispatch(
+        setItemLoading({
+          productId: productId,
+          actionType: "dec",
+          value: true,
+        }),
+      );
       const { data } = await api.put(
-        `/cart/product/${productId}/quantity/decrease`
+        `/cart/product/${productId}/quantity/decrease`,
       );
       dispatch(
         updateItemQuantity({
@@ -305,7 +353,14 @@ export const decreaseItemQuantityInCart =
           shipping: data.shipping,
           totalAmount: data.totalAmount,
           items: data.cartItems,
-        })
+        }),
+      );
+      dispatch(
+        setItemLoading({
+          productId: productId,
+          actionType: "dec",
+          value: false,
+        }),
       );
       toast.success(`${productName} quantity decreased`);
     } catch (err) {
@@ -318,11 +373,10 @@ export const getUserAddresses = () => async (dispatch) => {
   try {
     dispatch(addressLoading());
     const { data } = await api.get(`/user/address`);
-
     dispatch(
       getAddresses({
         data,
-      })
+      }),
     );
   } catch (err) {
     console.dir(err);
@@ -333,11 +387,12 @@ export const getUserAddresses = () => async (dispatch) => {
 export const addNewAddresses = (formData) => async (dispatch) => {
   try {
     dispatch(addressLoading());
-    console.log(formData);
 
     const { data } = await api.post(`/address`, {
       name: formData.name,
       buildingName: formData.buildingName,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
       locality: formData.streetAddress,
       ...(formData.landmark && { landmark: formData.landmark }),
       city: formData.city,
@@ -348,7 +403,7 @@ export const addNewAddresses = (formData) => async (dispatch) => {
     dispatch(
       addAddress({
         data,
-      })
+      }),
     );
   } catch (err) {
     console.dir(err);
@@ -363,6 +418,8 @@ export const editUserAddress = (formData, addressId) => async (dispatch) => {
     const { data } = await api.put(`/address/${addressId}`, {
       name: formData.name,
       buildingName: formData.buildingName,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
       locality: formData.streetAddress,
       ...(formData.landmark && { landmark: formData.landmark }),
       city: formData.city,
@@ -373,7 +430,7 @@ export const editUserAddress = (formData, addressId) => async (dispatch) => {
     dispatch(
       editAddress({
         data,
-      })
+      }),
     );
   } catch (err) {
     console.dir(err);
@@ -388,7 +445,7 @@ export const deleteUserAddress = (addressId) => async (dispatch) => {
     dispatch(
       deleteAddress({
         data,
-      })
+      }),
     );
   } catch (err) {
     console.dir(err);
@@ -423,7 +480,7 @@ export const verifyOrderStatus = async (orderId) => {
   let attempts = 0;
   while (attempts < 5) {
     const { data } = await api.get(`/orders/status?orderId=${orderId}`);
-    console.log(data);
+
     if (data === "CONFIRMED") {
       return "CONFIRMED";
     } else if (data === "PAYMENT_FAILED") {
@@ -439,6 +496,7 @@ export const fetchUserOrders =
   (offset = 0, limit = 8) =>
   async (dispatch) => {
     try {
+      console.log("Loading the orders");
       dispatch(orderLoading());
       const { data } = await api.get(`/orders`);
       dispatch(fetchUserOrderSuccess(data));
@@ -484,7 +542,7 @@ export const addNewReview = (orderItemId, review) => async (dispatch) => {
       updateOrderItemReviewByOrderItemId({
         orderItemId: orderItemId,
         review: data.review,
-      })
+      }),
     );
     toast.success("Review added");
   } catch (err) {
@@ -498,7 +556,7 @@ export const registerSeller = async (
   formData,
   setIsLoading,
   setError,
-  setIsSuccess
+  setIsSuccess,
 ) => {
   try {
     setIsLoading(true);
@@ -519,7 +577,7 @@ export const addNewProduct = async (
   categoryId,
   setIsLoading,
   setError,
-  setIsSuccess
+  setIsSuccess,
 ) => {
   try {
     setIsLoading(true);
@@ -528,7 +586,7 @@ export const addNewProduct = async (
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },
-      }
+      },
     );
     setIsLoading(false);
     setIsSuccess(true);

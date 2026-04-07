@@ -8,6 +8,7 @@ const initialState = {
   totalAmount: null,
   items: [],
   loading: false,
+  loadingMap: {},
   error: null,
 };
 const cartSlice = createSlice({
@@ -60,6 +61,11 @@ const cartSlice = createSlice({
       state.items = action.payload.items;
       state.loading = false;
     },
+    setItemLoading: (state, action) => {
+      const { productId, actionType, value } = action.payload;
+      const key = `${productId}_${actionType}`;
+      state.loadingMap[key] = value;
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(logout, (state) => {
@@ -74,5 +80,6 @@ export const {
   cartFailure,
   removeItem,
   updateItemQuantity,
+  setItemLoading,
 } = cartSlice.actions;
 export default cartSlice.reducer;
