@@ -205,35 +205,41 @@ export default function NavigationBar() {
                       <div className="absolute -top-1 -right-1 w-4 h-4 bg-gray-300 rounded-full animate-pulse"></div>
                     </div>
                   ) : (
-                    <Badge
-                      showZero
-                      badgeContent={
-                        isCartLoading ? (
-                          <CircularProgress
-                            size={10}
-                            thickness={6}
-                            sx={{ color: "#36d7b7" }}
-                          />
-                        ) : (
-                          items.length
-                        )
-                      }
-                      color="primary"
-                      sx={{
-                        "& .MuiBadge-badge": {
-                          backgroundColor: isCartLoading ? "white" : undefined,
-                          color: isCartLoading ? "inherit" : "white",
-                          border: isCartLoading ? "1px solid #e2e8f0" : "none",
-                          padding: isCartLoading ? "2px" : "0",
-                          minWidth: isCartLoading ? "18px" : "20px",
-                          height: isCartLoading ? "18px" : "20px",
-                        },
-                      }}
-                    >
-                      <span className="flex items-center gap-1">
-                        <FiShoppingCart className="h-6 w-6" />
-                      </span>
-                    </Badge>
+                    <Link to={"/cart"}>
+                      <Badge
+                        showZero
+                        badgeContent={
+                          isCartLoading ? (
+                            <CircularProgress
+                              size={10}
+                              thickness={6}
+                              sx={{ color: "#36d7b7" }}
+                            />
+                          ) : (
+                            items.length
+                          )
+                        }
+                        color="primary"
+                        sx={{
+                          "& .MuiBadge-badge": {
+                            backgroundColor: isCartLoading
+                              ? "white"
+                              : undefined,
+                            color: isCartLoading ? "inherit" : "white",
+                            border: isCartLoading
+                              ? "1px solid #e2e8f0"
+                              : "none",
+                            padding: isCartLoading ? "2px" : "0",
+                            minWidth: isCartLoading ? "18px" : "20px",
+                            height: isCartLoading ? "18px" : "20px",
+                          },
+                        }}
+                      >
+                        <span className="flex items-center gap-1">
+                          <FiShoppingCart className="h-6 w-6" />
+                        </span>
+                      </Badge>
+                    </Link>
                   )}
 
                   {roles.includes("SELLER", "ADMIN") || !isAuthenticated ? (
