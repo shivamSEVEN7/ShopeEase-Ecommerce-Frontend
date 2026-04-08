@@ -37,7 +37,6 @@ const Checkout = () => {
   let orderId = useRef("");
   const proceedButtonHandler = async () => {
     if (activeStep === 1) {
-      console.log(paymentMode.id);
       if (paymentMode.id === "cod") {
         setSteps(["Address", "Payment Method", "Order Summary"]);
       } else {
@@ -46,10 +45,8 @@ const Checkout = () => {
     }
 
     if (activeStep === 2) {
-      //For COD Orders
       if (paymentMode.id === "cod") {
         try {
-          console.log("Creating COD order...");
           const data = await dispatch(
             createOrder(
               items,
@@ -68,7 +65,6 @@ const Checkout = () => {
           alert("Failed to create the order. Please try again.");
         }
       } else {
-        //For Online Orders
         try {
           console.log("Creating order...");
           const data = await dispatch(
@@ -144,7 +140,7 @@ const Checkout = () => {
             </button>
 
             <button
-              disabled={orderLoading}
+              disabled={orderLoading || !selectedAddress || !paymentMode.id}
               onClick={proceedButtonHandler}
               className="py-2 px-8 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-sm disabled:bg-gray-400"
             >
