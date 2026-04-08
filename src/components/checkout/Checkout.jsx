@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { createOrder } from "../../store/actions";
 import Loader from "../shared/Loader";
 import { ClipLoader, GridLoader, MoonLoader } from "react-spinners";
-import { Toaster } from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { useNavigate } from "react-router";
 import Countdown from "../shared/Countdown";
 
@@ -20,6 +20,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { items } = useSelector((state) => state.cart);
   const { selectedAddress } = useSelector((state) => state.address);
+
   const { paymentMode } = useSelector((state) => state.payment);
   const { loading: orderLoading, error: orderError } = useSelector(
     (state) => state.order,
@@ -36,7 +37,17 @@ const Checkout = () => {
   let paymentSessionId = useRef("");
   let orderId = useRef("");
   const proceedButtonHandler = async () => {
+    if (activeStep === 0) {
+      if (!selectedAddress) {
+        toast.error("Please select an address");
+        return;
+      }
+    }
     if (activeStep === 1) {
+      if (!paymentMode.id) {
+        toast.error("Please select a payment method");
+        return;
+      }
       if (paymentMode.id === "cod") {
         setSteps(["Address", "Payment Method", "Order Summary"]);
       } else {
@@ -66,7 +77,6 @@ const Checkout = () => {
         }
       } else {
         try {
-          console.log("Creating order...");
           const data = await dispatch(
             createOrder(
               items,
@@ -82,9 +92,7 @@ const Checkout = () => {
           alert("Failed to create the order. Please try again.");
         }
       }
-    }
-    // For any other step before the end
-    else if (activeStep < 3) {
+    } else if (activeStep < 3) {
       setActiveStep((prev) => prev + 1);
     }
   };
@@ -140,7 +148,7 @@ const Checkout = () => {
             </button>
 
             <button
-              disabled={orderLoading || !selectedAddress || !paymentMode.id}
+              disabled={orderLoading}
               onClick={proceedButtonHandler}
               className="py-2 px-8 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors shadow-sm disabled:bg-gray-400"
             >
